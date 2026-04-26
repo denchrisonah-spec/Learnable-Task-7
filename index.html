@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quizable</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f4f3ff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      color: #1a1a2e;
+    }
+
+    .quiz-wrap {
+      width: 100%;
+      max-width: 620px;
+    }
+
+    .app-title {
+      text-align: center;
+      font-size: 28px;
+      font-weight: 800;
+      color: #3c3489;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.02em;
+    }
+
+
+
+    /* Question card */
+    .q-card {
+      background: #ffffff;
+      border: 1px solid #e2e1f5;
+      border-radius: 14px;
+      padding: 1.75rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 12px rgba(127, 119, 221, 0.08);
+    }
+
+    .q-meta {
+      font-size: 13px;
+      color: #7f77dd;
+      font-weight: 500;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .q-text {
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+      color: #1a1a2e;
+    }
+
+    /* Options */
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .opt-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #f9f8ff;
+      border: 1.5px solid #e2e1f5;
+      border-radius: 10px;
+      padding: 13px 16px;
+      cursor: pointer;
+      font-size: 15px;
+      color: #1a1a2e;
+      text-align: left;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      width: 100%;
+    }
+
+    .opt-btn:hover:not(:disabled) {
+      border-color: #7f77dd;
+      background: #eeedfe;
+      transform: translateX(2px);
+    }
+
+    .opt-btn:disabled {
+      cursor: default;
+    }
+
+    .opt-btn.correct {
+      border-color: #1d9e75;
+      background: #e1f5ee;
+      color: #085041;
+    }
+
+    .opt-btn.wrong {
+      border-color: #d85a30;
+      background: #faece7;
+      color: #4a1b0c;
+    }
+
+    .opt-letter {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1.5px solid #c8c5f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+      color: #534ab7;
+    }
+
+    .opt-btn.correct .opt-letter {
+      background: #1d9e75;
+      border-color: #1d9e75;
+      color: #fff;
+    }
+
+    .opt-btn.wrong .opt-letter {
+      background: #d85a30;
+      border-color: #d85a30;
+      color: #fff;
+    }
+
+    /* Navigation */
+    .nav-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 1rem;
+    }
+
+    .next-btn {
+      background: #7f77dd;
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      padding: 11px 28px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      letter-spacing: 0.01em;
+    }
+
+    .next-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .next-btn:not(:disabled):hover {
+      opacity: 0.88;
+      transform: translateY(-1px);
+    }
+
+    .next-btn:not(:disabled):active {
+      transform: translateY(0);
+    }
+
+    /* Results screen */
+    .results {
+      background: #ffffff;
+      border: 1px solid #e2e1f5;
+      border-radius: 14px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(127, 119, 221, 0.08);
+    }
+
+    .score-circle {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: #eeedfe;
+      border: 3px solid #7f77dd;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+
+    .score-num {
+      font-size: 32px;
+      font-weight: 700;
+      color: #3c3489;
+      line-height: 1;
+    }
+
+    .score-denom {
+      font-size: 13px;
+      color: #534ab7;
+      margin-top: 2px;
+    }
+
+    .result-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 0.4rem;
+    }
+
+    .result-sub {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 1.75rem;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .stat-box {
+      background: #f9f8ff;
+      border: 1px solid #e2e1f5;
+      border-radius: 10px;
+      padding: 12px 24px;
+      min-width: 90px;
+    }
+
+    .stat-val {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .stat-lbl {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .stat-val.correct-val { color: #1d9e75; }
+    .stat-val.wrong-val   { color: #d85a30; }
+    .stat-val.pct-val     { color: #534ab7; }
+
+    .restart-btn {
+      background: #ffffff;
+      border: 1.5px solid #7f77dd;
+      color: #534ab7;
+      border-radius: 10px;
+      padding: 11px 32px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .restart-btn:hover {
+      background: #eeedfe;
+      transform: translateY(-1px);
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .q-text { font-size: 16px; }
+      .stats-row { gap: 8px; }
+      .stat-box { padding: 10px 14px; min-width: 70px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-wrap">
+    <div id="app"></div>
+  </div>
+
+  <script>
+    // ─── Quiz Data ───────────────────────────────────────────────────────────────
+    // Each question has:
+    //   q    - the question text
+    //   opts - array of 4 answer strings
+    //   ans  - index (0-3) of the correct answer
+
+    const questions = [
+      {
+        q: "What does HTML stand for?",
+        opts: [
+          "HyperText Markup Language",
+          "HighText Machine Language",
+          "Hyperlink and Text Markup Language",
+          "HyperText Making Language",
+        ],
+        ans: 0,
+      },
+      {
+        q: "Which keyword declares a variable that cannot be reassigned in JavaScript?",
+        opts: ["var", "let", "const", "static"],
+        ans: 2,
+      },
+      {
+        q: "What is the output of `typeof null` in JavaScript?",
+        opts: ["null", "undefined", "object", "string"],
+        ans: 2,
+      },
+      {
+        q: "Which data structure uses FIFO (First In, First Out) order?",
+        opts: ["Stack", "Queue", "Tree", "Graph"],
+        ans: 1,
+      },
+      {
+        q: "What symbol is used for single-line comments in JavaScript?",
+        opts: ["#", "//", "--", "/* */"],
+        ans: 1,
+      },
+      {
+        q: "Which array method adds an element to the end of an array?",
+        opts: ["push()", "pop()", "shift()", "unshift()"],
+        ans: 0,
+      },
+      {
+        q: "In CSS, which property changes the text color?",
+        opts: ["font-color", "text-color", "color", "foreground"],
+        ans: 2,
+      },
+      {
+        q: "What does CSS stand for?",
+        opts: [
+          "Creative Style Sheets",
+          "Cascading Style Sheets",
+          "Computer Style Sheets",
+          "Colorful Style Sheets",
+        ],
+        ans: 1,
+      },
+      {
+        q: "Which loop guarantees at least one execution of its body?",
+        opts: ["for", "while", "do...while", "forEach"],
+        ans: 2,
+      },
+      {
+        q: "What is the correct syntax for a JavaScript arrow function?",
+        opts: [
+          "function myFunc => {}",
+          "myFunc = > {}",
+          "const myFunc = () => {}",
+          "const myFunc => () {}",
+        ],
+        ans: 2,
+      },
+    ];
+
+    // ─── State ────────────────────────────────────────────────────────────────────
+    let currentIndex = 0;
+    let score = 0;
+    let selectedOption = null;
+    let hasAnswered = false;
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────────
+    const LETTERS = ["A", "B", "C", "D"];
+
+    function getResultMessage(percentage) {
+      if (percentage === 100) return "Perfect score! Excellent work!";
+      if (percentage >= 80) return "Great job! You nailed it!";
+      if (percentage >= 60) return "Good effort! Room to grow.";
+      if (percentage >= 40) return "Keep practising — you're getting there!";
+      return "Keep studying — you'll improve!";
+    }
+
+    // ─── Render ───────────────────────────────────────────────────────────────────
+    function render() {
+      const app = document.getElementById("app");
+      if (currentIndex >= questions.length) {
+        renderResults(app);
+      } else {
+        renderQuestion(app);
+      }
+    }
+
+    function renderQuestion(app) {
+      const q = questions[currentIndex];
+      const progressPct = (currentIndex / questions.length) * 100;
+
+      const optionsHTML = q.opts
+        .map(
+          (opt, i) => `
+          <button class="opt-btn" id="opt-${i}" onclick="chooseAnswer(${i})" ${hasAnswered ? "disabled" : ""}>
+            <span class="opt-letter">${LETTERS[i]}</span>
+            ${opt}
+          </button>`
+        )
+        .join("");
+
+      app.innerHTML = `
+        <h1 class="app-title">Quizable</h1>
+        <div class="q-card">
+          <p class="q-meta">Question ${currentIndex + 1} of ${questions.length}</p>
+          <p class="q-text">${q.q}</p>
+          <div class="options">${optionsHTML}</div>
+        </div>
+        <div class="nav-row">
+          <button class="next-btn" id="next-btn" onclick="goToNext()" ${hasAnswered ? "" : "disabled"}>
+            ${currentIndex === questions.length - 1 ? "Finish Quiz" : "Next Question →"}
+          </button>
+        </div>
+      `;
+
+      if (hasAnswered) {
+        applyAnswerStyles();
+      }
+    }
+
+    function renderResults(app) {
+      const percentage = Math.round((score / questions.length) * 100);
+
+      app.innerHTML = `
+        <h1 class="app-title">Quizable</h1>
+        <div class="results">
+          <div class="score-circle">
+            <span class="score-num">${score}</span>
+            <span class="score-denom">of ${questions.length}</span>
+          </div>
+          <p class="result-title">${getResultMessage(percentage)}</p>
+          <p class="result-sub">You scored ${percentage}% on this quiz.</p>
+          <div class="stats-row">
+            <div class="stat-box">
+              <div class="stat-val correct-val">${score}</div>
+              <div class="stat-lbl">Correct</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val wrong-val">${questions.length - score}</div>
+              <div class="stat-lbl">Incorrect</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val pct-val">${percentage}%</div>
+              <div class="stat-lbl">Score</div>
+            </div>
+          </div>
+          <button class="restart-btn" onclick="restartQuiz()">Try Again</button>
+        </div>
+      `;
+    }
+
+    // ─── Event Handlers ───────────────────────────────────────────────────────────
+    function chooseAnswer(index) {
+      if (hasAnswered) return;
+
+      selectedOption = index;
+      hasAnswered = true;
+
+      const correctIndex = questions[currentIndex].ans;
+      if (index === correctIndex) {
+        score++;
+      }
+
+      applyAnswerStyles();
+      document.getElementById("next-btn").disabled = false;
+    }
+
+    function applyAnswerStyles() {
+      const correctIndex = questions[currentIndex].ans;
+
+      for (let i = 0; i < questions[currentIndex].opts.length; i++) {
+        const btn = document.getElementById("opt-" + i);
+        if (!btn) continue;
+
+        btn.disabled = true;
+
+        if (i === correctIndex) {
+          btn.classList.add("correct");
+        } else if (i === selectedOption) {
+          btn.classList.add("wrong");
+        }
+      }
+    }
+
+    function goToNext() {
+      currentIndex++;
+      selectedOption = null;
+      hasAnswered = false;
+      render();
+    }
+
+    function restartQuiz() {
+      currentIndex = 0;
+      score = 0;
+      selectedOption = null;
+      hasAnswered = false;
+      render();
+    }
+
+    // ─── Init ─────────────────────────────────────────────────────────────────────
+    render();
+  </script>
+</body>
+</html>
